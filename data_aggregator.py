@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from scipy import stats as sp_stats
 
 
-
 class TimeSeriesAggregator:
     def __init__(self, file_path: str, group_by: str, stats: list, columns: list = None, 
                  timefrom: int = None, timeto: int = None, plot: bool = False):
