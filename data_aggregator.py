@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 import numpy as np
 import re
+import sys
 import matplotlib.pyplot as plt
 from scipy import stats as sp_stats
 
@@ -164,28 +165,63 @@ class TimeSeriesAggregator:
         self.save_results()
         self.plot_results()
 
+def interactive_menu():
+    print("=== Time-Series Aggregator Interactive Menu ===")
+    file_path = input("Enter path to Excel file: ").strip()
+    group_by = input("Enter grouping interval (e.g., 1h, 30T, 1D): ").strip()
+    
+    stats = input("Enter stats to compute (min, max, mean, median, mode) separated by space [default=mean]: ").strip()
+    stats_list = stats.split() if stats else ["mean"]
+
+    columns = input("Enter columns to include (short names) separated by space [press Enter for all]: ").strip()
+    columns_list = columns.split() if columns else None
+
+    timefrom = input("Enter start time in epoch ms (optional): ").strip()
+    timefrom = int(timefrom) if timefrom else None
+
+    timeto = input("Enter end time in epoch ms (optional): ").strip()
+    timeto = int(timeto) if timeto else None
+
+    plot_input = input("Enable plotting? (y/n) [default=n]: ").strip().lower()
+    plot = plot_input == "y"
+
+    return {
+        "file_path": file_path,
+        "group_by": group_by,
+        "stats": stats_list,
+        "columns": columns_list,
+        "timefrom": timefrom,
+        "timeto": timeto,
+        "plot": plot
+    }
+
 def main():
-    parser = argparse.ArgumentParser(description="Time-Series Data Aggregator")
-    parser.add_argument("--input", required=True, help="Input Excel file path")
-    parser.add_argument("--group-by", required=True, help="Grouping interval, e.g., 1h, 30T, 1D")
-    parser.add_argument("--stats", nargs="+", default=["mean"], help="Stats to compute (min, max, mean, median, mode)")
-    parser.add_argument("--columns", nargs="*", help="Columns to include (short names)")
-    parser.add_argument("--timefrom", type=int, help="Start time in epoch ms (optional)")
-    parser.add_argument("--timeto", type=int, help="End time in epoch ms (optional)")
-    parser.add_argument("--plot", action="store_true", help="Enable plotting of results")
-    args = parser.parse_args()
+    if len(sys.argv) > 1:
+        # Use argparse if command-line args are provided
+        parser = argparse.ArgumentParser(description="Time-Series Data Aggregator")
+        parser.add_argument("--input", required=True, help="Input Excel file path")
+        parser.add_argument("--group-by", required=True, help="Grouping interval, e.g., 1h, 30T, 1D")
+        parser.add_argument("--stats", nargs="+", default=["mean"], help="Stats to compute (min, max, mean, median, mode)")
+        parser.add_argument("--columns", nargs="*", help="Columns to include (short names)")
+        parser.add_argument("--timefrom", type=int, help="Start time in epoch ms (optional)")
+        parser.add_argument("--timeto", type=int, help="End time in epoch ms (optional)")
+        parser.add_argument("--plot", action="store_true", help="Enable plotting of results")
+        args = parser.parse_args()
+        params = {
+            "file_path": args.input,
+            "group_by": args.group_by,
+            "stats": args.stats,
+            "columns": args.columns,
+            "timefrom": args.timefrom,
+            "timeto": args.timeto,
+            "plot": args.plot
+        }
+    else:
+        # Otherwise, use interactive menu
+        params = interactive_menu()
 
-    aggregator = TimeSeriesAggregator(
-        file_path=args.input,
-        group_by=args.group_by,
-        stats=args.stats,
-        columns=args.columns,
-        timefrom=args.timefrom,
-        timeto=args.timeto,
-        plot=args.plot
-    )
+    aggregator = TimeSeriesAggregator(**params)
     aggregator.run()
-
 
 if __name__ == "__main__":
     main()
